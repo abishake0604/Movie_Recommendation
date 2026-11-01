@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CineMatch | Movie Recommendations</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand"><span class="brand-icon">▶</span> CineMatch</div>
+    <span class="tech">SPARK ALS · MONGODB</span>
+  </header>
+  <main class="container">
+    <section class="hero">
+      <p class="eyebrow">YOUR NEXT FAVORITE MOVIE</p>
+      <h1>Movies picked<br><span>for your taste.</span></h1>
+      <p class="subtext">Collaborative filtering powered by Apache Spark MLlib ALS and MovieLens ratings.</p>
+      <form method="post" class="search-form">
+        <label for="user_id">MovieLens user ID</label>
+        <div class="form-row">
+          <input id="user_id" name="user_id" type="number" min="1" max="943" value="{{ user_id }}" required>
+          <button type="submit">Find my movies <span>→</span></button>
+        </div>
+        <small>Try any user ID from 1 to 943.</small>
+      </form>
+    </section>
+
+    {% if error %}<div class="alert">{{ error }}</div>{% endif %}
+
+    <section class="section">
+      <div class="section-heading">
+        <div><p class="eyebrow">PERSONALIZED FOR USER {{ user_id }}</p><h2>Recommended for you</h2></div>
+        <span class="pill">Top 10 · ALS</span>
+      </div>
+      {% if recommendations %}
+      <div class="movie-grid">
+        {% for movie in recommendations %}
+        <article class="movie-card">
+          <div class="poster poster-{{ loop.index % 6 }}"><span class="poster-mark">C</span><span class="poster-id">FILM {{ "%04d"|format(movie.movie_id) }}</span></div>
+          <div class="movie-info">
+            <div class="rank">#{{ movie.rank }} RECOMMENDED</div>
+            <h3>{{ movie.title }}</h3>
+            <p class="genres">{{ (movie.genres or [])|join(" · ") if movie.genres else "Classic cinema" }}</p>
+            <div class="rating"><span>★</span> Predicted rating <strong>{{ "%.2f"|format(movie.predicted_rating) }}/5</strong></div>
+          </div>
+        </article>
+        {% endfor %}
+      </div>
+      {% else %}
+      <div class="empty">
+        <div class="empty-icon">✦</div>
+        <h3>Recommendations will appear here</h3>
+        <p>Import the dataset and run the Spark ALS training script to generate personalized results.</p>
+      </div>
+      {% endif %}
+    </section>
+
+    <section class="section popular-section">
+      <div class="section-heading"><div><p class="eyebrow">COMMUNITY FAVORITES</p><h2>Popular movies</h2></div><span class="pill">30+ ratings</span></div>
+      <div class="popular-list">
+        {% for movie in popular %}
+        <div class="popular-row">
+          <div class="mini-poster">▶</div>
+          <div class="popular-title"><strong>{{ movie.title }}</strong><small>{{ (movie.genres or [])|join(" · ") if movie.genres else "MovieLens collection" }}</small></div>
+          <div class="popular-rating"><span>★</span> {{ movie.avg_rating }} <small>({{ movie.rating_count }})</small></div>
+        </div>
+        {% else %}
+        <p class="muted">Popular movies appear after the dataset has been imported.</p>
+        {% endfor %}
+      </div>
+    </section>
+    <footer>
+      <span>CineMatch · Academic mini project</span>
+      <span>{% if model_info.validation_rmse %}ALS validation RMSE: {{ model_info.validation_rmse }}{% else %}Collaborative filtering with Spark MLlib{% endif %}</span>
+    </footer>
+  </main>
+</body>
+</html>
